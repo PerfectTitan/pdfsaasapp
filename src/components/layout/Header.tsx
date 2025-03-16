@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
   username?: string;
@@ -27,6 +28,7 @@ const Header = ({
 }: HeaderProps) => {
   const [searchQuery, setSearchQuery] = React.useState("");
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   // Use user data from Supabase if available
   const displayName = user?.user_metadata?.full_name || username || "Guest";
@@ -35,6 +37,10 @@ const Header = ({
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     onSearch(searchQuery);
+  };
+
+  const handleNavigate = (path: string) => {
+    navigate(path);
   };
 
   return (
@@ -61,7 +67,12 @@ const Header = ({
         <Button variant="outline" size="icon" className="rounded-full">
           <HelpCircle className="h-5 w-5 text-gray-600" />
         </Button>
-        <Button variant="outline" size="icon" className="rounded-full">
+        <Button
+          variant="outline"
+          size="icon"
+          className="rounded-full"
+          onClick={() => handleNavigate("/account-settings")}
+        >
           <Settings className="h-5 w-5 text-gray-600" />
         </Button>
 
@@ -83,9 +94,19 @@ const Header = ({
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>{displayName}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Account Settings</DropdownMenuItem>
-            <DropdownMenuItem>Team Management</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleNavigate("/profile")}>
+              Profile
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => handleNavigate("/account-settings")}
+            >
+              Account Settings
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => handleNavigate("/team-management")}
+            >
+              Team Management
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="text-red-600"
