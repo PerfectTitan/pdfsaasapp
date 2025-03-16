@@ -12,6 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface HeaderProps {
   username?: string;
@@ -25,6 +26,11 @@ const Header = ({
   onSearch = () => {},
 }: HeaderProps) => {
   const [searchQuery, setSearchQuery] = React.useState("");
+  const { user, signOut } = useAuth();
+
+  // Use user data from Supabase if available
+  const displayName = username || user?.user_metadata?.full_name || "John Doe";
+  const userAvatarUrl = avatarUrl || user?.user_metadata?.avatar_url || "";
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,9 +70,9 @@ const Header = ({
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="rounded-full p-0">
               <Avatar className="h-9 w-9">
-                <AvatarImage src={avatarUrl} alt={username} />
+                <AvatarImage src={userAvatarUrl} alt={displayName} />
                 <AvatarFallback className="bg-primary/10 text-primary">
-                  {username
+                  {displayName
                     .split(" ")
                     .map((n) => n[0])
                     .join("")}
@@ -75,13 +81,21 @@ const Header = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>{username}</DropdownMenuLabel>
+            <DropdownMenuLabel>{displayName}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Profile</DropdownMenuItem>
             <DropdownMenuItem>Account Settings</DropdownMenuItem>
             <DropdownMenuItem>Team Management</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600">Logout</DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-red-600"
+              onClick={async () => {
+                await signOut();
+                window.location.href = "/";
+              }}
+            >
+              Logout
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

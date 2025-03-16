@@ -1,19 +1,30 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AppLayout from "./layout/AppLayout";
 import DocumentGrid from "./dashboard/DocumentGrid";
 import DocumentPreview from "./document/DocumentPreview";
 import AuthModal from "./auth/AuthModal";
 import { Button } from "@/components/ui/button";
 import { Upload, Plus } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface HomeProps {
   isAuthenticated?: boolean;
 }
 
 const Home = ({ isAuthenticated = false }: HomeProps) => {
+  const { user, isLoading } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(!isAuthenticated);
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
   const [showDocumentPreview, setShowDocumentPreview] = useState(false);
+
+  // Show auth modal if user is not authenticated
+  useEffect(() => {
+    if (!isLoading && !user) {
+      setShowAuthModal(true);
+    } else {
+      setShowAuthModal(false);
+    }
+  }, [user, isLoading]);
 
   // Mock document data
   const documents = [

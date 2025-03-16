@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Button } from "../ui/button";
@@ -36,11 +37,9 @@ const registerSchema = z
     confirmPassword: z
       .string()
       .min(8, { message: "Password must be at least 8 characters" }),
-    terms: z
-      .boolean()
-      .refine((val) => val === true, {
-        message: "You must accept the terms and conditions",
-      }),
+    terms: z.boolean().refine((val) => val === true, {
+      message: "You must accept the terms and conditions",
+    }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -83,14 +82,56 @@ const AuthModal = ({
     },
   });
 
-  const onLoginSubmit = (data: LoginFormValues) => {
-    console.log("Login data:", data);
-    // Handle login logic here
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  // Import useAuth hook
+  const { signIn, signUp } = useAuth();
+
+  const onLoginSubmit = async (data: LoginFormValues) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await signIn(data.email, data.password);
+
+      if (error) {
+        setError(error.message);
+      } else {
+        // Close modal on successful login
+        if (onOpenChange) onOpenChange(false);
+      }
+    } catch (err) {
+      setError("An unexpected error occurred");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const onRegisterSubmit = (data: RegisterFormValues) => {
-    console.log("Register data:", data);
-    // Handle registration logic here
+  const onRegisterSubmit = async (data: RegisterFormValues) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await signUp(data.email, data.password, data.name);
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setSuccess(
+          "Registration successful! Please check your email to confirm your account.",
+        );
+        // Switch to login tab after successful registration
+        setActiveTab("login");
+      }
+    } catch (err) {
+      setError("An unexpected error occurred");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -195,13 +236,20 @@ const AuthModal = ({
                     variant="link"
                     className="p-0 h-auto text-sm"
                     type="button"
+                    onClick={() => (window.location.href = "/reset-password")}
                   >
                     Forgot password?
                   </Button>
                 </div>
 
-                <Button type="submit" className="w-full">
-                  Sign In
+                {error && activeTab === "login" && (
+                  <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md">
+                    {error}
+                  </div>
+                )}
+
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Signing in..." : "Sign In"}
                 </Button>
               </form>
             </Form>
@@ -335,8 +383,20 @@ const AuthModal = ({
                   )}
                 />
 
-                <Button type="submit" className="w-full">
-                  Create Account
+                {error && activeTab === "register" && (
+                  <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md">
+                    {error}
+                  </div>
+                )}
+
+                {success && activeTab === "register" && (
+                  <div className="p-3 text-sm text-green-500 bg-green-50 rounded-md">
+                    {success}
+                  </div>
+                )}
+
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Creating Account..." : "Create Account"}
                 </Button>
               </form>
             </Form>
