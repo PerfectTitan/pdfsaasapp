@@ -21,7 +21,7 @@ interface HeaderProps {
 }
 
 const Header = ({
-  username = "John Doe",
+  username = "",
   avatarUrl = "",
   onSearch = () => {},
 }: HeaderProps) => {
@@ -29,8 +29,8 @@ const Header = ({
   const { user, signOut } = useAuth();
 
   // Use user data from Supabase if available
-  const displayName = username || user?.user_metadata?.full_name || "John Doe";
-  const userAvatarUrl = avatarUrl || user?.user_metadata?.avatar_url || "";
+  const displayName = user?.user_metadata?.full_name || username || "Guest";
+  const userAvatarUrl = user?.user_metadata?.avatar_url || avatarUrl || "";
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
