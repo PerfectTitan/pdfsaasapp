@@ -8,6 +8,9 @@ on:
     - cron: '0 0 * * *'  # Runs daily at midnight UTC
   workflow_dispatch:  # Allows manual triggering
 
+permissions:
+  contents: write  # Allow GitHub Actions to push changes
+
 jobs:
   check-license:
     runs-on: ubuntu-latest
@@ -22,7 +25,6 @@ jobs:
             echo "License exists."
             exit 0
           else
-            echo "License missing. Creating LICENSE.md..."
             echo "LICENSE_MISSING=true" >> $GITHUB_ENV
           fi
 
@@ -58,4 +60,4 @@ jobs:
           git config --global user.name "GitHub Actions"
           git add LICENSE.md
           git commit -m "Add LICENSE.md automatically"
-          git push
+          git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/PerfectTitan/pdfsaasapp.git main
