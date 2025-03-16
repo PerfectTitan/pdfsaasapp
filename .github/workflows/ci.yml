@@ -22,8 +22,11 @@ jobs:
       - name: Install Dependencies
         run: npm install  # Ensures ESLint & other dependencies are installed
 
+      - name: Verify ESLint Installation
+        run: npx eslint --version  # Checks if ESLint is installed & accessible
+
       - name: Run ESLint
-        run: npm run lint  # Runs linting properly
+        run: npx eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0  # Use `npx` to ensure correct execution
 
       - name: Run Tests
         run: npm test
