@@ -26,7 +26,9 @@ const ProfilePage = () => {
   const { user } = useAuth();
   const { register, handleSubmit, setValue } = useForm<ProfileFormData>({
     defaultValues: {
-      fullName: user?.user_metadata?.full_name || "",
+      fullName:
+        user?.user_metadata?.full_name ||
+        (user?.email ? getNameFromEmail(user.email) : ""),
       email: user?.email || "",
       avatarUrl: user?.user_metadata?.avatar_url || "",
     },
@@ -34,7 +36,11 @@ const ProfilePage = () => {
 
   React.useEffect(() => {
     if (user) {
-      setValue("fullName", user.user_metadata?.full_name || "");
+      setValue(
+        "fullName",
+        user.user_metadata?.full_name ||
+          (user.email ? getNameFromEmail(user.email) : ""),
+      );
       setValue("email", user.email || "");
       setValue("avatarUrl", user.user_metadata?.avatar_url || "");
     }
@@ -71,6 +77,19 @@ const ProfilePage = () => {
       .join("");
   };
 
+  const getNameFromEmail = (email: string) => {
+    if (!email) return "";
+    // Extract name part before @ symbol and convert to title case
+    const namePart = email.split("@")[0];
+    // Replace dots, underscores, numbers with spaces and capitalize each word
+    return namePart
+      .replace(/[._\d]/g, " ")
+      .trim()
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+
   return (
     <AppLayout>
       <div className="max-w-3xl mx-auto">
@@ -90,7 +109,10 @@ const ProfilePage = () => {
                 <Avatar className="h-20 w-20">
                   <AvatarImage src={user?.user_metadata?.avatar_url || ""} />
                   <AvatarFallback className="text-lg bg-primary/10 text-primary">
-                    {getInitials(user?.user_metadata?.full_name || "Guest")}
+                    {getInitials(
+                      user?.user_metadata?.full_name ||
+                        (user?.email ? getNameFromEmail(user.email) : "Guest"),
+                    )}
                   </AvatarFallback>
                 </Avatar>
                 <div>
