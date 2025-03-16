@@ -80,9 +80,10 @@ const Home = ({ isAuthenticated = false }: HomeProps) => {
     setShowDocumentPreview(true);
   };
 
-  const handleUpload = (files: File[]) => {
+  const handleUpload = async (files: File[]) => {
     console.log(`Uploading ${files.length} files`);
-    // In a real app, this would handle file upload to a server
+    // The actual upload is now handled in the UploadButton component
+    // which uses the storage.ts functions to upload to Supabase
   };
 
   const handleClosePreview = () => {

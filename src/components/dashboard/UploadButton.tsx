@@ -1,14 +1,17 @@
-import React, { useState, useRef } from "react";
-import { Upload, Plus, FileUp, X } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Progress } from "../../components/ui/progress";
-import { Card, CardContent } from "../../components/ui/card";
+import React, { useState, useRef, useEffect } from "react";
+import { Upload, Plus, FileUp, X, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "../../components/ui/tooltip";
+} from "@/components/ui/tooltip";
+import { uploadFile, initializeStorage } from "@/lib/storage";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface UploadButtonProps {
   onUpload?: (files: File[]) => void;
@@ -21,12 +24,22 @@ const UploadButton = ({
   maxFiles = 10,
   acceptedFileTypes = ".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png",
 }: UploadButtonProps) => {
+  const { user } = useAuth();
   const [isDragging, setIsDragging] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{
     [key: string]: number;
   }>({});
   const [uploadingFiles, setUploadingFiles] = useState<File[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Initialize storage bucket when component mounts
+  useEffect(() => {
+    initializeStorage().catch((err) => {
+      console.error("Failed to initialize storage:", err);
+      setError("Failed to initialize storage. Please try again later.");
+    });
+  }, []);
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -53,34 +66,67 @@ const UploadButton = ({
   };
 
   const handleFiles = (files: File[]) => {
+    if (!user) {
+      setError("Please log in to upload files");
+      return;
+    }
+
+    setError(null);
     // Limit the number of files
     const filesToUpload = files.slice(0, maxFiles);
     setUploadingFiles(filesToUpload);
 
-    // Simulate upload progress
+    // Upload each file to Supabase storage
     filesToUpload.forEach((file) => {
-      simulateFileUpload(file);
+      uploadFileToStorage(file);
     });
 
     // Call the onUpload callback
     onUpload(filesToUpload);
   };
 
-  const simulateFileUpload = (file: File) => {
-    let progress = 0;
+  const uploadFileToStorage = async (file: File) => {
+    if (!user) return;
+
     const fileId = file.name + Date.now();
+    setUploadProgress((prev) => ({ ...prev, [fileId]: 0 }));
 
-    setUploadProgress((prev) => ({ ...prev, [fileId]: progress }));
+    try {
+      // Start progress animation
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 5;
+        if (progress >= 90) {
+          clearInterval(interval);
+        }
+        setUploadProgress((prev) => ({ ...prev, [fileId]: progress }));
+      }, 200);
 
-    const interval = setInterval(() => {
-      progress += Math.random() * 10;
-      if (progress >= 100) {
-        progress = 100;
-        clearInterval(interval);
+      // Actual upload
+      const { path, error } = await uploadFile(file, user.id);
+
+      clearInterval(interval);
+
+      if (error) {
+        throw error;
       }
 
-      setUploadProgress((prev) => ({ ...prev, [fileId]: progress }));
-    }, 300);
+      // Complete the progress
+      setUploadProgress((prev) => ({ ...prev, [fileId]: 100 }));
+
+      // After a delay, remove the file from the uploading list
+      setTimeout(() => {
+        setUploadingFiles((prev) =>
+          prev.filter((f) => f.name + Date.now() !== fileId),
+        );
+      }, 2000);
+
+      console.log("File uploaded successfully:", path);
+    } catch (err) {
+      console.error("Error uploading file:", err);
+      setError(`Failed to upload ${file.name}. Please try again.`);
+      setUploadProgress((prev) => ({ ...prev, [fileId]: 0 }));
+    }
   };
 
   const cancelUpload = (file: File) => {
@@ -101,6 +147,13 @@ const UploadButton = ({
       onDrop={handleDrop}
     >
       <CardContent className="flex flex-col items-center justify-center h-full w-full p-0">
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
         {uploadingFiles.length > 0 ? (
           <div className="w-full space-y-4">
             <h3 className="text-sm font-medium text-center mb-2">

@@ -83,7 +83,10 @@ const DocumentGrid = ({
     },
   ],
   onDocumentClick = (id) => console.log(`Document ${id} clicked`),
-  onUpload = (files) => console.log(`Uploading ${files.length} files`),
+  onUpload = (files) => {
+    console.log(`Uploading ${files.length} files`);
+    // The actual upload is now handled in the UploadButton component
+  },
 }: DocumentGridProps) => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
