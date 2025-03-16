@@ -148,17 +148,17 @@ const AuthModal = ({
           onValueChange={(value) => setActiveTab(value as "login" | "register")}
           className="w-full"
         >
-          <TabsList className="grid grid-cols-2 w-full rounded-none">
+          <TabsList className="grid grid-cols-2 w-full rounded-none h-12">
             <TabsTrigger
               value="login"
-              className="py-3 data-[state=active]:bg-background"
+              className="h-full data-[state=active]:bg-background flex items-center justify-center"
             >
               <LogIn className="mr-2 h-4 w-4" />
               Login
             </TabsTrigger>
             <TabsTrigger
               value="register"
-              className="py-3 data-[state=active]:bg-background"
+              className="h-full data-[state=active]:bg-background flex items-center justify-center"
             >
               <UserPlus className="mr-2 h-4 w-4" />
               Register
