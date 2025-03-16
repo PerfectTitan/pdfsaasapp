@@ -28,6 +28,9 @@ function App() {
   return (
     <Suspense fallback={<p>Loading...</p>}>
       <>
+        {/* Tempo routes need to be rendered first */}
+        {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
+
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/reset-password" element={<ResetPassword />} />
@@ -48,11 +51,10 @@ function App() {
 
           {/* Add a catch-all route */}
           {import.meta.env.VITE_TEMPO === "true" && (
-            <Route path="/tempobook/*" />
+            <Route path="/tempobook/*" element={<div />} />
           )}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
-        {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
       </>
     </Suspense>
   );
