@@ -1,0 +1,61 @@
+name: Ensure LICENSE.md Exists
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 0 * * *'  # Runs daily at midnight UTC
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  check-license:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Check for LICENSE.md
+        id: check_file
+        run: |
+          if [ -f LICENSE.md ]; then
+            echo "License exists."
+            exit 0
+          else
+            echo "License missing. Creating LICENSE.md..."
+            echo "LICENSE_MISSING=true" >> $GITHUB_ENV
+          fi
+
+      - name: Create LICENSE.md
+        if: env.LICENSE_MISSING == 'true'
+        run: |
+          echo "MIT License" > LICENSE.md
+          echo "" >> LICENSE.md
+          echo "Copyright (c) $(date +%Y) $(git config user.name)" >> LICENSE.md
+          echo "" >> LICENSE.md
+          echo "Permission is hereby granted, free of charge, to any person obtaining a copy" >> LICENSE.md
+          echo "of this software and associated documentation files (the 'Software'), to deal" >> LICENSE.md
+          echo "in the Software without restriction, including without limitation the rights" >> LICENSE.md
+          echo "to use, copy, modify, merge, publish, distribute, sublicense, and/or sell" >> LICENSE.md
+          echo "copies of the Software, and to permit persons to whom the Software is" >> LICENSE.md
+          echo "furnished to do so, subject to the following conditions:" >> LICENSE.md
+          echo "" >> LICENSE.md
+          echo "The above copyright notice and this permission notice shall be included in all" >> LICENSE.md
+          echo "copies or substantial portions of the Software." >> LICENSE.md
+          echo "" >> LICENSE.md
+          echo "THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR" >> LICENSE.md
+          echo "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY," >> LICENSE.md
+          echo "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE" >> LICENSE.md
+          echo "AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER" >> LICENSE.md
+          echo "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM," >> LICENSE.md
+          echo "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN" >> LICENSE.md
+          echo "THE SOFTWARE." >> LICENSE.md
+
+      - name: Commit and Push License
+        if: env.LICENSE_MISSING == 'true'
+        run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git add LICENSE.md
+          git commit -m "Add LICENSE.md automatically"
+          git push
